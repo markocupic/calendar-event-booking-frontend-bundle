@@ -1,11 +1,25 @@
 <?php $this->extend('block_unsearchable'); ?>
 
 <?php $this->block('content'); ?>
-<?php if($this->members): ?>
-<table>
-<?= $this->members ?>
-</table>
-<?php endif; ?>
 
+<?php if($this->members != ''): ?>
+    <div class="ce_table">
+        <table class="all_records sortable">
+            <thead>
+                <tr>
+                    <th class="head col_first">Vorname</a></th>
+                    <th class="head">Nachname</a></th>
+                    <th class="head col_last">Ort</a></th>
+                </tr>
+            </thead>
+            <tbody>
+            <?= $this->members ?>
+        </table>
+    </div>
+<?php else: ?>
+    <!--
+    <p class="no-event-subscriptions-found">Zu diesem Event gibt es noch keine Anmeldungen.</p>
+    -->
+<?php endif; ?>
 
 <?php $this->endblock(); ?>

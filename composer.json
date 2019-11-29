@@ -27,7 +27,7 @@
     "source": "https://github.com/markocupic/calendar-event-booking-frontend-bundle"
   },
   "require": {
-    "contao/core-bundle":"^4.4",
+    "contao/core-bundle": "^4.4",
     "markocupic/calendar-event-booking-bundle": "^3.3"
   },
   "autoload": {
@@ -35,14 +35,13 @@
       "Markocupic\\CalendarEventBookingFrontendBundle\\": "src/"
     },
     "classmap": [
-      "src/Resources/contao"
+      "src/Resources/contao/"
     ],
     "exclude-from-classmap": [
-      "src/Resources/contao/assets",
-      "src/Resources/contao/config",
-      "src/Resources/contao/dca",
-      "src/Resources/contao/languages",
-      "src/Resources/contao/templates"
+      "src/Resources/contao/config/",
+      "src/Resources/contao/dca/",
+      "src/Resources/contao/languages/",
+      "src/Resources/contao/templates/"
     ]
   },
   "extra": {

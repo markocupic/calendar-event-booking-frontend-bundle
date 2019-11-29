@@ -1,35 +1,34 @@
 <?php
+
 /*
  * Copyright Marko Cupic <m.cupic@gmx.ch>, 2019
  * @author Marko Cupic
- * @link https://github.com/markocupic/dummy-bundle
+ * @link https://github.com/markocupic/calendar-event-booking-frontend-bundle
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
 
 namespace Markocupic\CalendarEventBookingFrontendBundle\Controller\FrontendModule;
 
-use Contao\BackendUser;
+use Contao\CalendarEventsMemberModel;
+use Contao\CalendarEventsModel;
 use Contao\Config;
 use Contao\CoreBundle\Controller\FrontendModule\AbstractFrontendModuleController;
-use Contao\CoreBundle\Exception\RedirectResponseException;
 use Contao\CoreBundle\Framework\ContaoFramework;
 use Contao\CoreBundle\Routing\ScopeMatcher;
 use Contao\CoreBundle\ServiceAnnotation\FrontendModule;
-use Contao\Date;
-use Contao\FormTextField;
-use Contao\FrontendUser;
+use Contao\Database;
+use Contao\FrontendTemplate;
+use Contao\Input;
 use Contao\ModuleModel;
 use Contao\PageModel;
 use Contao\Template;
-use Doctrine\DBAL\Connection;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Security\Core\Security;
 
 /**
- * Class DummyModuleController
+ * Class CalendarEventBookingMemberListController
  * @package Markocupic\CalendarEventBookingFrontendBundle\Controller\FrontendModule
  * @FrontendModule(category="events", type="calendar_event_booking_member_list_module")
  */
@@ -37,55 +36,34 @@ class CalendarEventBookingMemberListController extends AbstractFrontendModuleCon
 {
 
     /**
-     * @var PageModel
-     */
-    private $page;
-
-    /**
      * @var ContaoFramework
      */
-    private $framework;
-
-    /**
-     * @var Connection
-     */
-    private $connection;
-
-    /**
-     * @var string
-     */
-    private $projectDir;
-
-    /**
-     * @var Security
-     */
-    private $security;
+    protected $framework;
 
     /**
      * @var RequestStack
      */
-    private $requestStack;
+    protected $requestStack;
 
     /**
      * @var ScopeMatcher
      */
-    private $scopeMatcher;
+    protected $scopeMatcher;
 
     /**
-     * DummyModuleController constructor.
+     * @var CalendarEventsModel
+     */
+    protected $objEvent;
+
+    /**
+     * CalendarEventBookingMemberListController constructor.
      * @param ContaoFramework $framework
-     * @param Connection $connection
-     * @param string $projectDir
-     * @param Security $security
      * @param RequestStack $requestStack
      * @param ScopeMatcher $scopeMatcher
      */
-    public function __construct(ContaoFramework $framework, Connection $connection, string $projectDir, Security $security, RequestStack $requestStack, ScopeMatcher $scopeMatcher)
+    public function __construct(ContaoFramework $framework, RequestStack $requestStack, ScopeMatcher $scopeMatcher)
     {
         $this->framework = $framework;
-        $this->connection = $connection;
-        $this->projectDir = $projectDir;
-        $this->security = $security;
         $this->requestStack = $requestStack;
         $this->scopeMatcher = $scopeMatcher;
     }
@@ -102,12 +80,32 @@ class CalendarEventBookingMemberListController extends AbstractFrontendModuleCon
      */
     public function __invoke(Request $request, ModuleModel $model, string $section, array $classes = null, PageModel $page = null): Response
     {
-        $this->page = $page;
-
         // Return empty string, if user is not logged in as a frontend user
         if ($this->isFrontend())
         {
-            if (!$this->security->getUser() instanceof FrontendUser)
+            // Set adapters
+            $configAdapter = $this->framework->getAdapter(Config::class);
+            $inputAdapter = $this->framework->getAdapter(Input::class);
+            $calendarEventsModelAdapter = $this->framework->getAdapter(CalendarEventsModel::class);
+
+            $showEmpty = false;
+            // Set the item from the auto_item parameter
+            if (!isset($_GET['events']) && $configAdapter->get('useAutoItem') && isset($_GET['auto_item']))
+            {
+                $inputAdapter->setGet('events', $inputAdapter->get('auto_item'));
+            }
+
+            // Return an empty string if "events" is not set (to combine list and reader on same page)
+            if (!$inputAdapter->get('events'))
+            {
+                $showEmpty = true;
+            }
+            elseif (null === ($this->objEvent = $calendarEventsModelAdapter->findByIdOrAlias($inputAdapter->get('events'))))
+            {
+                $showEmpty = true;
+            }
+
+            if ($showEmpty)
             {
                 return new Response('', Response::HTTP_NO_CONTENT);
             }
@@ -126,65 +124,34 @@ class CalendarEventBookingMemberListController extends AbstractFrontendModuleCon
      */
     protected function getResponse(Template $template, ModuleModel $model, Request $request): ?Response
     {
-        // Generate text field
-        $opt = [
-            'id'        => 'myTextField',
-            'name'      => 'myTextField',
-            'label'     => 'My text field',
-            'mandatory' => true
-        ];
-        $widget = $this->framework->createInstance(FormTextField::class, [$opt]);
+        // Set adapters
 
-        // Preset value
-        if (!$request->isMethod('post') && $request->request->get($widget->name) == '')
+        $databaseAdapter = $this->framework->getAdapter(Database::class);
+        $calendarEventsMemberModelAdapter = $this->framework->getAdapter(CalendarEventsMemberModel::class);
+
+        $objStmt = $databaseAdapter->getInstance()->prepare('SELECT * FROM tl_calendar_events_member WHERE pid=? ORDER BY lastname, firstname, city')->execute($this->objEvent->id);
+        $count = $objStmt->numRows;
+        $i = 0;
+        $strRows = '';
+        while ($objStmt->next())
         {
-            $widget->value = 'Holy moly, please write something in there!';
+            // Get partial template
+            $partial = new FrontendTemplate($model->calendar_event_booking_member_list_partial_template);
+
+            // Set model
+            $memberModel = $calendarEventsMemberModelAdapter->findByPk($objStmt->id);
+            $partial->model = $memberModel;
+
+            $rowFirst = ($i == 0) ? ' row_first' : '';
+            $rowLast = ($i == $count - 1) ? ' row_last' : '';
+            $evenOrOdd = ($i % 2) ? ' odd' : ' even';
+            $partial->rowClass = sprintf('row_%s%s%s%s', $i, $rowFirst, $rowLast, $evenOrOdd);
+
+            $partial->cssClass = $cssClass;
+            $strRows .= $partial->parse();
+            $i++;
         }
-
-        // Redirect if the form has been submitted
-        if ($request->isMethod('post') && $request->request->get($widget->name) !== '')
-        {
-            $widget->validate();
-            if (!$widget->hasErrors())
-            {
-                if (null !== ($redirectPage = PageModel::findByPk($model->jumpTo)))
-                {
-                    throw new RedirectResponseException($redirectPage->getAbsoluteUrl());
-                }
-            }
-        }
-
-        $template->textField = $widget->parse();
-
-        // Get the logged in user object
-        $template->user = 'Please log in to see your username';
-        if (($user = $this->security->getUser()) instanceof BackendUser)
-        {
-            $template->user = 'You are logged in as backend user ' . $user->getUsername() . ' (' . $user->email . ')';
-        }
-
-        if (($user = $this->security->getUser()) instanceof FrontendUser)
-        {
-            $template->user = 'You are logged in as frontend user ' . $user->getUsername() . ' (' . $user->email . ')';
-        }
-
-        // Get the contao scope (TL_MODE will be deprecated in future releases)
-        $scope = 'No scope!';
-        $scope = $this->isFrontend() ? 'The scope of the current request is Frontend.' : $scope;
-        $scope = $this->isBackend() ? 'The scope of the current request is Backend.' : $scope;
-        $template->scope = $scope;
-
-        // Get the page alias
-        $template->pageAlias = $this->page->alias;
-        $template->projectDir = 'The projectDir is located in "' . $this->projectDir . '".';
-        $template->action = $request->getUri();
-
-        // Get contao date and config adapter
-        $date = $this->framework->getAdapter(Date::class);
-        $config = $this->framework->getAdapter(Config::class);
-
-        // Get the current date
-        $template->date = $date->parse($config->get('dateFormat'));
+        $template->members = $strRows;
 
         return $template->getResponse();
     }
@@ -193,16 +160,7 @@ class CalendarEventBookingMemberListController extends AbstractFrontendModuleCon
      * Identify the Contao scope (TL_MODE) of the current request
      * @return bool
      */
-    public function isBackend()
-    {
-        return $this->scopeMatcher->isBackendRequest($this->requestStack->getCurrentRequest());
-    }
-
-    /**
-     * Identify the Contao scope (TL_MODE) of the current request
-     * @return bool
-     */
-    public function isFrontend()
+    protected function isFrontend()
     {
         return $this->scopeMatcher->isFrontendRequest($this->requestStack->getCurrentRequest());
     }

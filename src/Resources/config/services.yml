@@ -1,15 +1,22 @@
 services:
-
   markocupic.calendar_event_booking_frontend_bundle.controller.frontend_module.calendar_event_booking_member_list_controller:
     class: Markocupic\CalendarEventBookingFrontendBundle\Controller\FrontendModule\CalendarEventBookingMemberListController
     arguments:
-      - '@contao.framework'
-      - '@database_connection'
-      - '%kernel.project_dir%'
-      - '@security.helper'
-      - '@request_stack'
-      - '@contao.routing.scope_matcher'
+    - '@contao.framework'
+    - '@request_stack'
+    - '@contao.routing.scope_matcher'
     tags:
-      - { name: contao.frontend_module, category: events }
+    - { name: contao.frontend_module, category: events }
+    public: true
+
+  markocupic.calendar_event_booking_frontend_bundle.contao.dca.tl_module:
+    class: Markocupic\CalendarEventBookingFrontendBundle\Contao\Dca\TlModule
+    arguments:
+    - '@contao.framework'
+    - '@database_connection'
+    - '%kernel.project_dir%'
+    - '@security.helper'
+    - '@request_stack'
+    - '@contao.routing.scope_matcher'
     public: true
 

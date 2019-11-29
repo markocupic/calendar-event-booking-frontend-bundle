@@ -31,7 +31,7 @@ class Plugin implements BundlePluginInterface
     public function getBundles(ParserInterface $parser): array
     {
         return [
-            BundleConfig::create(ContaoCalendarBundle::class)
+            BundleConfig::create(MarkocupicCalendarEventBookingFrontendBundle::class)
                 ->setLoadAfter([ContaoCoreBundle::class])
         ];
     }
