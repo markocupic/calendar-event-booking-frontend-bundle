@@ -1,0 +1,41 @@
+{
+  "name": "markocupic/calendar-event-booking-frontend-bundle",
+  "description": "Contao calendar event booking frontend bundle.",
+  "keywords": [
+    "contao",
+    "contao 4",
+    "event booking",
+    "bundle",
+    "member list",
+    "frontend modules",
+    "remove the version property when downloading from packagist",
+    "installation: download the package as a zip-file from github and upload it with contao manager"
+  ],
+  "version": "1.0.0",
+  "type": "contao-bundle",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Marko Cupic",
+      "email": "m.cupic@gmx.ch",
+      "homepage": "https://github.com/markocupic",
+      "role": "Developer"
+    }
+  ],
+  "support": {
+    "issues": "https://github.com/markocupic/calendar-event-booking-frontend-bundle/issues",
+    "source": "https://github.com/markocupic/calendar-event-booking-frontend-bundle"
+  },
+  "require": {
+    "contao/core-bundle":"^4.4",
+    "markocupic/calendar-event-booking-bundle": "^3.3"
+  },
+  "autoload": {
+    "psr-4": {
+      "Markocupic\\CalendarEventBookingFrontendBundle\\": "src/"
+    }
+  },
+  "extra": {
+    "contao-manager-plugin": "Markocupic\\CalendarEventBookingFrontendBundle\\ContaoManager\\Plugin"
+  }
+}
