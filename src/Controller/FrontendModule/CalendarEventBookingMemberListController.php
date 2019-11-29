@@ -91,6 +91,7 @@ class CalendarEventBookingMemberListController extends AbstractFrontendModuleCon
             $calendarEventsModelAdapter = $this->framework->getAdapter(CalendarEventsModel::class);
 
             $showEmpty = false;
+            
             // Set the item from the auto_item parameter
             if (!isset($_GET['events']) && $configAdapter->get('useAutoItem') && isset($_GET['auto_item']))
             {
