@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * Copyright Marko Cupic <m.cupic@gmx.ch>, 2019
  * @author Marko Cupic
@@ -125,11 +127,10 @@ class CalendarEventBookingMemberListController extends AbstractFrontendModuleCon
     protected function getResponse(Template $template, ModuleModel $model, Request $request): ?Response
     {
         // Set adapters
-
         $databaseAdapter = $this->framework->getAdapter(Database::class);
         $calendarEventsMemberModelAdapter = $this->framework->getAdapter(CalendarEventsMemberModel::class);
 
-        $objStmt = $databaseAdapter->getInstance()->prepare('SELECT * FROM tl_calendar_events_member WHERE pid=? ORDER BY lastname, firstname, city')->execute($this->objEvent->id);
+        $objStmt = $databaseAdapter->getInstance()->prepare('SELECT id FROM tl_calendar_events_member WHERE pid=? ORDER BY lastname, firstname, city')->execute($this->objEvent->id);
         $count = $objStmt->numRows;
         $i = 0;
         $strRows = '';
@@ -142,12 +143,12 @@ class CalendarEventBookingMemberListController extends AbstractFrontendModuleCon
             $memberModel = $calendarEventsMemberModelAdapter->findByPk($objStmt->id);
             $partial->model = $memberModel;
 
+            // Row class
             $rowFirst = ($i == 0) ? ' row_first' : '';
             $rowLast = ($i == $count - 1) ? ' row_last' : '';
             $evenOrOdd = ($i % 2) ? ' odd' : ' even';
             $partial->rowClass = sprintf('row_%s%s%s%s', $i, $rowFirst, $rowLast, $evenOrOdd);
 
-            $partial->cssClass = $cssClass;
             $strRows .= $partial->parse();
             $i++;
         }
@@ -160,7 +161,7 @@ class CalendarEventBookingMemberListController extends AbstractFrontendModuleCon
      * Identify the Contao scope (TL_MODE) of the current request
      * @return bool
      */
-    protected function isFrontend()
+    protected function isFrontend(): bool
     {
         return $this->scopeMatcher->isFrontendRequest($this->requestStack->getCurrentRequest());
     }

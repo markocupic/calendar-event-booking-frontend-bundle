@@ -14,7 +14,7 @@ $GLOBALS['TL_DCA']['tl_module']['palettes']['calendar_event_booking_member_list'
 // Fields
 $GLOBALS['TL_DCA']['tl_module']['fields']['calendar_event_booking_member_list_template'] = array
 (
-    'label'            => &$GLOBALS['TL_LANG']['tl_modules']['calendar_event_booking_member_list_template'],
+    'label'            => &$GLOBALS['TL_LANG']['tl_module']['calendar_event_booking_member_list_template'],
     'exclude'          => true,
     'inputType'        => 'select',
     'options_callback' => array('markocupic.calendar_event_booking_frontend_bundle.contao.dca.tl_module', 'getCalendarEventBookingMemberListTemplate'),
@@ -24,7 +24,7 @@ $GLOBALS['TL_DCA']['tl_module']['fields']['calendar_event_booking_member_list_te
 
 $GLOBALS['TL_DCA']['tl_module']['fields']['calendar_event_booking_member_list_partial_template'] = array
 (
-    'label'            => &$GLOBALS['TL_LANG']['tl_modules']['calendar_event_booking_member_list_partial_template'],
+    'label'            => &$GLOBALS['TL_LANG']['tl_module']['calendar_event_booking_member_list_partial_template'],
     'exclude'          => true,
     'inputType'        => 'select',
     'options_callback' => array('markocupic.calendar_event_booking_frontend_bundle.contao.dca.tl_module', 'getCalendarEventBookingMemberListPartialTemplate'),

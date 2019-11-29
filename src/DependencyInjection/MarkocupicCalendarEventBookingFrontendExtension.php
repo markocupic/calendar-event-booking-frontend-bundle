@@ -3,11 +3,11 @@
 declare(strict_types=1);
 
 /*
- * This file is part of Contao.
- *
- * (c) Leo Feyer
- *
- * @license LGPL-3.0-or-later
+ * Copyright Marko Cupic <m.cupic@gmx.ch>, 2019
+ * @author Marko Cupic
+ * @link https://github.com/markocupic/calendar-event-booking-frontend-bundle
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace Markocupic\CalendarEventBookingFrontendBundle\DependencyInjection;
@@ -17,6 +17,10 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\Extension;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 
+/**
+ * Class MarkocupicCalendarEventBookingFrontendExtension
+ * @package Markocupic\CalendarEventBookingFrontendBundle\DependencyInjection
+ */
 class MarkocupicCalendarEventBookingFrontendExtension extends Extension
 {
     /**
