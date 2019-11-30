@@ -11,7 +11,7 @@
     "remove the version property when downloading from packagist",
     "installation: download the package as a zip-file from github and upload it with contao manager"
   ],
-  "version": "1.0.4",
+  "version": "1.0.0",
   "type": "contao-bundle",
   "license": "MIT",
   "authors": [
@@ -48,3 +48,4 @@
     "contao-manager-plugin": "Markocupic\\CalendarEventBookingFrontendBundle\\ContaoManager\\Plugin"
   }
 }
+
