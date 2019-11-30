@@ -139,9 +139,7 @@ class CalendarEventBookingMemberListController extends AbstractFrontendModuleCon
         // Set adapters
         $calendarEventsMemberModelAdapter = $this->framework->getAdapter(CalendarEventsMemberModel::class);
 
-        /**
-         * @var Doctrine\DBAL\Query\QueryBuilder
-         */
+        /** @var  Doctrine\DBAL\Query\QueryBuilder $qb */
         $qb = $this->connection->createQueryBuilder();
         $qb->select('id')
             ->from('tl_calendar_events_member', 't')
@@ -157,14 +155,10 @@ class CalendarEventBookingMemberListController extends AbstractFrontendModuleCon
         $strRows = '';
         while (false !== ($arrEventMember = $results->fetch()))
         {
-            /**
-             * @var FrontendTemplate
-             */
+            /** @var  FrontendTemplate $partial */
             $partial = new FrontendTemplate($model->calendar_event_booking_member_list_partial_template);
 
-            /**
-             * @var CalendarEventsMemberModel
-             */
+            /** @var CalendarEventsMemberModel $memberModel */
             $memberModel = $calendarEventsMemberModelAdapter->findByPk($arrEventMember['id']);
             $partial->model = $memberModel;
 
