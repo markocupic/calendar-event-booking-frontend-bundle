@@ -158,9 +158,9 @@ class CalendarEventBookingMemberListController extends AbstractFrontendModuleCon
             /** @var  FrontendTemplate $partial */
             $partial = new FrontendTemplate($model->calendar_event_booking_member_list_partial_template);
 
-            /** @var CalendarEventsMemberModel $memberModel */
-            $memberModel = $calendarEventsMemberModelAdapter->findByPk($arrEventMember['id']);
-            $partial->model = $memberModel;
+            /** @var CalendarEventsMemberModel $calendarEventsMemberModel */
+            $calendarEventsMemberModel = $calendarEventsMemberModelAdapter->findByPk($arrEventMember['id']);
+            $partial->model = $calendarEventsMemberModel;
 
             // Row class
             $rowFirst = ($i === 0) ? ' row_first' : '';
