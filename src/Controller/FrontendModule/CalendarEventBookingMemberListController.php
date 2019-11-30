@@ -139,16 +139,8 @@ class CalendarEventBookingMemberListController extends AbstractFrontendModuleCon
         // Set adapters
         $calendarEventsMemberModelAdapter = $this->framework->getAdapter(CalendarEventsMemberModel::class);
 
-        /** @var  Doctrine\DBAL\Query\QueryBuilder $qb */
-        $qb = $this->connection->createQueryBuilder();
-        $qb->select('id')
-            ->from('tl_calendar_events_member', 't')
-            ->where('t.pid = :id')
-            ->orderBy('t.lastname', 'ASC')
-            ->addOrderBy('t.firstname', 'ASC')
-            ->addOrderBy('t.city', 'ASC')
-            ->setParameter('id', $this->objEvent->id);
-        $results = $qb->execute();
+        /** @var  Doctrine\DBAL\Driver\PDOStatement $results */
+        $results = $this->getSignedUpMembers();
         $intRowCount = $results->rowCount();
 
         $i = 0;
@@ -163,10 +155,7 @@ class CalendarEventBookingMemberListController extends AbstractFrontendModuleCon
             $partial->model = $calendarEventsMemberModel;
 
             // Row class
-            $rowFirst = ($i === 0) ? ' row_first' : '';
-            $rowLast = ($i === $intRowCount - 1) ? ' row_last' : '';
-            $evenOrOdd = ($i % 2) ? ' odd' : ' even';
-            $partial->rowClass = sprintf('row_%s%s%s%s', $i, $rowFirst, $rowLast, $evenOrOdd);
+            $partial->rowClass = $this->getRowClass($i, $intRowCount);
 
             $strRows .= $partial->parse();
             $i++;
@@ -179,6 +168,37 @@ class CalendarEventBookingMemberListController extends AbstractFrontendModuleCon
         $template->event = $this->objEvent;
 
         return $template->getResponse();
+    }
+
+    /**
+     * Get signed up members of current event
+     * @return \Doctrine\DBAL\Driver\PDOStatement
+     */
+    protected function getSignedUpMembers(): \Doctrine\DBAL\Driver\PDOStatement
+    {
+        /** @var  Doctrine\DBAL\Query\QueryBuilder $qb */
+        $qb = $this->connection->createQueryBuilder();
+        $qb->select('id')
+            ->from('tl_calendar_events_member', 't')
+            ->where('t.pid = :id')
+            ->orderBy('t.lastname', 'ASC')
+            ->addOrderBy('t.firstname', 'ASC')
+            ->addOrderBy('t.city', 'ASC')
+            ->setParameter('id', $this->objEvent->id);
+        return $qb->execute();
+    }
+
+    /**
+     * @param int $i
+     * @param int $intRowsTotal
+     * @return string
+     */
+    protected function getRowClass(int $i, int $intRowsTotal): string
+    {
+        $rowFirst = ($i === 0) ? ' row_first' : '';
+        $rowLast = ($i === $intRowsTotal - 1) ? ' row_last' : '';
+        $evenOrOdd = ($i % 2) ? ' odd' : ' even';
+        return sprintf('row_%s%s%s%s', $i, $rowFirst, $rowLast, $evenOrOdd);
     }
 
     /**
