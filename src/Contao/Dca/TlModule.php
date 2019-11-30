@@ -67,13 +67,14 @@ class TlModule extends Backend
      */
     public function __construct(ContaoFramework $framework, Connection $connection, string $projectDir, Security $security, RequestStack $requestStack, ScopeMatcher $scopeMatcher)
     {
+        parent::__construct();
+
         $this->framework = $framework;
         $this->connection = $connection;
         $this->projectDir = $projectDir;
         $this->security = $security;
         $this->requestStack = $requestStack;
         $this->scopeMatcher = $scopeMatcher;
-        //parent::__construct();
     }
 
     /**
