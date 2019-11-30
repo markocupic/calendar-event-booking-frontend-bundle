@@ -32,7 +32,10 @@ class Plugin implements BundlePluginInterface
     {
         return [
             BundleConfig::create(MarkocupicCalendarEventBookingFrontendBundle::class)
-                ->setLoadAfter([ContaoCoreBundle::class])
+                ->setLoadAfter([
+                    ContaoCoreBundle::class,
+                    MarkocupicCalendarEventBookingBundle::class
+                ])
         ];
     }
 }
