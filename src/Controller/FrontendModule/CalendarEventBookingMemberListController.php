@@ -19,12 +19,12 @@ use Contao\CoreBundle\Controller\FrontendModule\AbstractFrontendModuleController
 use Contao\CoreBundle\Framework\ContaoFramework;
 use Contao\CoreBundle\Routing\ScopeMatcher;
 use Contao\CoreBundle\ServiceAnnotation\FrontendModule;
-use Contao\Database;
 use Contao\FrontendTemplate;
 use Contao\Input;
 use Contao\ModuleModel;
 use Contao\PageModel;
 use Contao\Template;
+use Doctrine\DBAL\Connection;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
@@ -53,6 +53,11 @@ class CalendarEventBookingMemberListController extends AbstractFrontendModuleCon
     protected $scopeMatcher;
 
     /**
+     * @var Connection
+     */
+    protected $connection;
+
+    /**
      * @var CalendarEventsModel
      */
     protected $objEvent;
@@ -62,12 +67,15 @@ class CalendarEventBookingMemberListController extends AbstractFrontendModuleCon
      * @param ContaoFramework $framework
      * @param RequestStack $requestStack
      * @param ScopeMatcher $scopeMatcher
+     * @param Connection $connection
+     * @throws \Doctrine\DBAL\DBALException
      */
-    public function __construct(ContaoFramework $framework, RequestStack $requestStack, ScopeMatcher $scopeMatcher)
+    public function __construct(ContaoFramework $framework, RequestStack $requestStack, ScopeMatcher $scopeMatcher, Connection $connection)
     {
         $this->framework = $framework;
         $this->requestStack = $requestStack;
         $this->scopeMatcher = $scopeMatcher;
+        $this->connection = $connection;
     }
 
     /**
@@ -91,14 +99,14 @@ class CalendarEventBookingMemberListController extends AbstractFrontendModuleCon
             $calendarEventsModelAdapter = $this->framework->getAdapter(CalendarEventsModel::class);
 
             $showEmpty = false;
-            
+
             // Set the item from the auto_item parameter
             if (!isset($_GET['events']) && $configAdapter->get('useAutoItem') && isset($_GET['auto_item']))
             {
                 $inputAdapter->setGet('events', $inputAdapter->get('auto_item'));
             }
 
-            // Return an empty string if "events" is not set (to combine list and reader on same page)
+            // Return an empty string if "events" is not set
             if (!$inputAdapter->get('events'))
             {
                 $showEmpty = true;
@@ -128,32 +136,46 @@ class CalendarEventBookingMemberListController extends AbstractFrontendModuleCon
     protected function getResponse(Template $template, ModuleModel $model, Request $request): ?Response
     {
         // Set adapters
-        $databaseAdapter = $this->framework->getAdapter(Database::class);
         $calendarEventsMemberModelAdapter = $this->framework->getAdapter(CalendarEventsMemberModel::class);
 
-        $objStmt = $databaseAdapter->getInstance()->prepare('SELECT id FROM tl_calendar_events_member WHERE pid=? ORDER BY lastname, firstname, city')->execute($this->objEvent->id);
-        $count = $objStmt->numRows;
+        // Doctrine ORM Query builder
+        $qb = $this->connection->createQueryBuilder();
+        $qb->select('id')
+            ->from('tl_calendar_events_member', 't')
+            ->where('t.pid = :id')
+            ->orderBy('t.lastname', 'ASC')
+            ->addOrderBy('t.firstname', 'ASC')
+            ->addOrderBy('t.city', 'ASC')
+            ->setParameter('id', $this->objEvent->id);
+        $results = $qb->execute();
+        $intRowCount = $results->rowCount();
+
         $i = 0;
         $strRows = '';
-        while ($objStmt->next())
+        while (false !== ($row = $results->fetch()))
         {
             // Get partial template
             $partial = new FrontendTemplate($model->calendar_event_booking_member_list_partial_template);
 
             // Set model
-            $memberModel = $calendarEventsMemberModelAdapter->findByPk($objStmt->id);
+            $memberModel = $calendarEventsMemberModelAdapter->findByPk($row['id']);
             $partial->model = $memberModel;
 
             // Row class
-            $rowFirst = ($i == 0) ? ' row_first' : '';
-            $rowLast = ($i == $count - 1) ? ' row_last' : '';
+            $rowFirst = ($i === 0) ? ' row_first' : '';
+            $rowLast = ($i === $intRowCount - 1) ? ' row_last' : '';
             $evenOrOdd = ($i % 2) ? ' odd' : ' even';
             $partial->rowClass = sprintf('row_%s%s%s%s', $i, $rowFirst, $rowLast, $evenOrOdd);
 
             $strRows .= $partial->parse();
             $i++;
         }
+
+        // Add partial html to the parent template
         $template->members = $strRows;
+
+        // Add the event model to the parent template
+        $template->event = $this->objEvent;
 
         return $template->getResponse();
     }
