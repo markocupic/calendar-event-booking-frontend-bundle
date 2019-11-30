@@ -140,7 +140,7 @@ class CalendarEventBookingMemberListController extends AbstractFrontendModuleCon
         $calendarEventsMemberModelAdapter = $this->framework->getAdapter(CalendarEventsMemberModel::class);
 
         /** @var  Doctrine\DBAL\Driver\PDOStatement $results */
-        $results = $this->getSignedUpMembers();
+        $results = $this->getSignedUpMembers(intval($this->objEvent->id));
         $intRowCount = $results->rowCount();
 
         $i = 0;
@@ -172,19 +172,20 @@ class CalendarEventBookingMemberListController extends AbstractFrontendModuleCon
 
     /**
      * Get signed up members of current event
+     * @param int $id
      * @return \Doctrine\DBAL\Driver\PDOStatement
      */
-    protected function getSignedUpMembers(): \Doctrine\DBAL\Driver\PDOStatement
+    protected function getSignedUpMembers(int $id): \Doctrine\DBAL\Driver\PDOStatement
     {
         /** @var  Doctrine\DBAL\Query\QueryBuilder $qb */
         $qb = $this->connection->createQueryBuilder();
         $qb->select('id')
             ->from('tl_calendar_events_member', 't')
-            ->where('t.pid = :id')
+            ->where('t.pid = :pid')
             ->orderBy('t.lastname', 'ASC')
             ->addOrderBy('t.firstname', 'ASC')
             ->addOrderBy('t.city', 'ASC')
-            ->setParameter('id', $this->objEvent->id);
+            ->setParameter('pid', $id);
         return $qb->execute();
     }
 
